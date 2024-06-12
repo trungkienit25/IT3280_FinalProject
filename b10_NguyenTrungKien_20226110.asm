@@ -75,7 +75,7 @@
 .eqv CODE_MOD						0x48
 .eqv CODE_EQL						0x88
 .data
-NUMS:	.word		0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F
+NUMS_OF_7SEG:	.word		0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F # Lưu sẵn dạng mã LED 7 thanh của số (0 -> 9) vào mảng
 .text
 main:
     li      $t1,            IN_ADDRESS_HEXA_KEYBOARD
@@ -332,12 +332,12 @@ render_do:
     div     $t1,    $t0                 # Chia $t1 cho 10
     mfhi    $a0                         # Lấy phần dư của phép chia, chứa hàng đơn vị
     li      $a1,    SEVENSEG_RIGHT      # Đặt địa chỉ của module 7 đoạn bên phải vào $a1
-    jal     show_digit                        # Gọi hàm show_digit để hiển thị số hàng đơn vị
+    jal     show_digit                  # Gọi hàm show_digit để hiển thị số hàng đơn vị
     mflo    $t1                         # Lấy phần thập phân của phép chia, chứa hàng chục
     div     $t1,    $t0                 # Chia phần thập phân cho 10
     mfhi    $a0                         # Lấy phần dư của phép chia, chứa hàng chục
     li      $a1,    SEVENSEG_LEFT       # Đặt địa chỉ của module 7 đoạn bên trái vào $a1
-    jal     show_digit                        # Gọi hàm show_digit để hiển thị số hàng chục
+    jal     show_digit                  # Gọi hàm show_digit để hiển thị số hàng chục
 
 render_load:
     lw      $t1,            00($sp)                                         # Load
@@ -361,10 +361,10 @@ show_digit_store:
     sw      $t1,    00($sp)             # Lưu giá trị thanh ghi $t1
 
 show_digit_do:
-    la      $t0,    NUMS                # Load địa chỉ của mảng NUMS vào $t0
+    la      $t0,    NUMS_OF_7SEG        # Load địa chỉ của mảng NUMS_OF_7SEG vào $t0
     sll     $t1,    $a0,    2           # Nhân $a0 (số cần hiển thị) với 4 (độ dịch trái 2 bit)
-    add     $t0,    $t0,    $t1         # Tính địa chỉ của NUMS[$a0]
-    lw      $t0,    0($t0)              # Load giá trị từ NUMS[$a0] vào $t0
+    add     $t0,    $t0,    $t1         # Tính địa chỉ của NUMS_OF_7SEG[$a0]
+    lw      $t0,    0($t0)              # Load giá trị từ NUMS_OF_7SEG[$a0] vào $t0
     sb      $t0,    0($a1)              # Ghi giá trị này vào địa chỉ của module 7 đoạn ($a1)
 
 show_digit_load:
