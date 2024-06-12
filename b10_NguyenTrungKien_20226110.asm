@@ -1,13 +1,58 @@
-# Check not pressing. If all rows return $a0 == 0, update {code} = 0.
-# If {code} == 0, run `back_to_polling`.
+# Chương trình mô phỏng một máy tính đơn giản sử dụng bàn phím hex và hiển thị kết quả trên module 7 đoạn.
 
-# Check pressing. If pressed && $a0 != $s0, run `code_processing`.
-# Run `process_code` to get key's value && switch mode.
+# Các hàm và chức năng của chúng:
 
-# Mode 1: If old {operator} is "=", remove old info. Update {operand}, output new {operand}.
-# Mode 2: If old {operator} doesn't change, do nothing.
-# Else, update {operator}, update {answer} = {operand}, output old {operand}, remove old {operand}.
-# Mode 3: Update {answer} = {answer} {operator} {operand}, update {operator}, update {operand} = {answer}, output new {answer}.
+# main:
+# - Hàm chính của chương trình. Thiết lập các địa chỉ và giá trị ban đầu.
+# - Liên tục kiểm tra bàn phím hex để nhận các phím được nhấn.
+# - Gọi các hàm xử lý tương ứng với các phím được nhấn (các số 0-9 và các toán tử +, -, *, /, % và =).
+
+# polling:
+# - Vòng lặp chính để kiểm tra từng hàng của bàn phím hex.
+# - Đọc mã quét từ bàn phím và xác định phím được nhấn.
+# - Chuyển đến hàm xử lý mã phím nếu phát hiện phím được nhấn.
+
+# code_processing:
+# - Xử lý mã phím được nhấn và xác định hành động tiếp theo dựa trên chế độ hiện tại của chương trình.
+# - Chuyển đến các hàm xử lý cụ thể cho các phím số (0-9) và các toán tử (+, -, *, /, %, =).
+
+# process_code_0 đến process_code_9:
+# - Xử lý các phím số từ 0 đến 9.
+# - Cập nhật toán hạng và chế độ hiện tại.
+
+# process_code_add, process_code_sub, process_code_mul, process_code_div, process_code_mod, process_code_eql:
+# - Xử lý các phím toán tử (+, -, *, /, %, =).
+# - Cập nhật toán tử và chế độ hiện tại.
+
+# after_processing_code:
+# - Chuyển đến các chế độ xử lý tương ứng sau khi xử lý mã phím.
+
+# mode1:
+# - Chế độ nhập toán hạng.
+# - Nếu toán tử trước là "=", reset các giá trị cũ và bắt đầu nhập toán hạng mới.
+# - Hiển thị số mới trên module 7 đoạn.
+
+# mode2:
+# - Chế độ nhập toán tử.
+# - Nếu toán tử không thay đổi, không làm gì. Ngược lại, cập nhật toán tử và lưu kết quả tạm thời.
+# - Hiển thị toán tử tương ứng trên module 7 đoạn.
+
+# mode3:
+# - Chế độ tính toán kết quả.
+# - Thực hiện phép toán giữa toán hạng và kết quả tạm thời dựa trên toán tử hiện tại.
+# - Hiển thị kết quả mới trên module 7 đoạn.
+
+# sleep:
+# - Tạm dừng chương trình trong một khoảng thời gian ngắn để tránh xử lý quá nhanh.
+
+# render:
+# - Hiển thị số nguyên cần hiển thị trên module 7 đoạn.
+# - Tách số nguyên thành hàng đơn vị và hàng chục, sau đó gọi hàm show_digit để hiển thị từng phần.
+
+# show_digit:
+# - Hiển thị một số đơn trên module 7 đoạn.
+# - Chuyển đổi số cần hiển thị thành dạng mã của module 7 đoạn và ghi vào địa chỉ tương ứng.
+
 
 .eqv SEVENSEG_LEFT	0xFFFF0011
 .eqv SEVENSEG_RIGHT	0xFFFF0010
@@ -175,7 +220,7 @@ mode1_2:
     li      $v0,            1
     syscall 
     add     $a0,            $zero,                      $s3                 
-    jal     display                                                         # In {toán hạng} SEVENSEG
+    jal     render                                                         # In {toán hạng} SEVENSEG
     j       sleep
 
 # Chế độ 2: Nếu {toán tử} cũ không thay đổi, không làm gì cả.
@@ -185,7 +230,7 @@ mode2:
     add     $s4,            $zero,                      $s1                 # cập nhật {toán tử}
     add     $s5,            $zero,                      $s3                 # cập nhật {kết quả} = {toán hạng}
     add     $a0,            $zero,                      $s3                 # đầu ra {toán hạng} cũ
-    jal     display                                                         # In {toán hạng} SEVENSEG
+    jal     render                                                         # In {toán hạng} SEVENSEG
     beq     $s1,            10,                         print_add
     beq     $s1,            11,                         print_sub
     beq     $s1,            12,                         print_mul
@@ -260,7 +305,7 @@ after_compu:
     add     $a0,            $zero,                      $s5                 # Output {kết quả}
     li      $v0,            1
     syscall 
-    jal     display                                                         # Output {kết quả} đến SEVENSEG
+    jal     render                                                         # Output {kết quả} đến SEVENSEG
     j       sleep
 sleep:
     li      $a0,            100                                            # Sleep 100ms
@@ -270,10 +315,10 @@ back_to_polling:
     j       polling                                                         # Continue polling
 
 
-# hàm display:
-# Tham số [in] $a0 số nguyên cần hiển thị".
-display:
-display_save:
+# hàm render:
+# Tham số $a0 số nguyên cần hiển thị".
+render:
+render_store:
     add     $sp,    $sp,    -24             # Mở rộng stack
     sw      $ra,    20($sp)                 # Lưu địa chỉ trả về
     sw      $s0,    16($sp)                 # Lưu giá trị thanh ghi $s0
@@ -281,20 +326,20 @@ display_save:
     sw      $a1,    08($sp)             # Lưu giá trị tham số $a1 (địa chỉ của module 7 đoạn)
     sw      $t0,    04($sp)             # Lưu giá trị thanh ghi $t0
     sw      $t1,    00($sp)             # Lưu giá trị thanh ghi $t1
-display_body:
+render_do:
     li      $t0,    10                  # Load 10 vào thanh ghi $t0
     add     $t1,    $zero,  $a0         # Sao chép giá trị tham số $a0 vào thanh ghi $t1
     div     $t1,    $t0                 # Chia $t1 cho 10
     mfhi    $a0                         # Lấy phần dư của phép chia, chứa hàng đơn vị
     li      $a1,    SEVENSEG_RIGHT      # Đặt địa chỉ của module 7 đoạn bên phải vào $a1
-    jal     draw                        # Gọi hàm draw để hiển thị số hàng đơn vị
+    jal     show_digit                        # Gọi hàm show_digit để hiển thị số hàng đơn vị
     mflo    $t1                         # Lấy phần thập phân của phép chia, chứa hàng chục
     div     $t1,    $t0                 # Chia phần thập phân cho 10
     mfhi    $a0                         # Lấy phần dư của phép chia, chứa hàng chục
     li      $a1,    SEVENSEG_LEFT       # Đặt địa chỉ của module 7 đoạn bên trái vào $a1
-    jal     draw                        # Gọi hàm draw để hiển thị số hàng chục
+    jal     show_digit                        # Gọi hàm show_digit để hiển thị số hàng chục
 
-display_load:
+render_load:
     lw      $t1,            00($sp)                                         # Load
     lw      $t0,            04($sp)                                         # Load
     lw      $a1,            08($sp)                                         # Load
@@ -304,25 +349,25 @@ display_load:
     add     $sp,            $sp,      +24                                   # Thu ngăn xếp
     jr      $ra
 
-# Hàm vẽ:
-# Tham số [in] $a0 số cần hiển thị
-# Tham số [in] $a1 SEVENSEG để hiển thị
+# Hàm show_digit:
+# Tham số $a0 là số cần hiển thị
+# Tham số $a1 là mã SEVENSEG để hiển thị
 
-draw:
-draw_save:
+show_digit:
+show_digit_store:
     add     $sp,    $sp,    -12         # Mở rộng stack
     sw      $ra,    08($sp)             # Lưu địa chỉ trả về
     sw      $t0,    04($sp)             # Lưu giá trị thanh ghi $t0
     sw      $t1,    00($sp)             # Lưu giá trị thanh ghi $t1
 
-draw_body:
+show_digit_do:
     la      $t0,    NUMS                # Load địa chỉ của mảng NUMS vào $t0
     sll     $t1,    $a0,    2           # Nhân $a0 (số cần hiển thị) với 4 (độ dịch trái 2 bit)
     add     $t0,    $t0,    $t1         # Tính địa chỉ của NUMS[$a0]
     lw      $t0,    0($t0)              # Load giá trị từ NUMS[$a0] vào $t0
     sb      $t0,    0($a1)              # Ghi giá trị này vào địa chỉ của module 7 đoạn ($a1)
 
-draw_load:
+show_digit_load:
     lw      $t1,    00($sp)             # Load giá trị thanh ghi $t1 từ stack
     lw      $t0,    04($sp)             # Load giá trị thanh ghi $t0 từ stack
     lw      $ra,    08($sp)             # Load địa chỉ trả về từ stack
