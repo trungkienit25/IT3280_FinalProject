@@ -1,4 +1,4 @@
-# Chương trình mô phỏng một máy tính đơn giản sử dụng bàn phím hex và hiển thị kết quả trên module 7 đoạn.
+# Chương trình mô phỏng một máy tính đơn giản sử dụng bàn phím hex và hiển thị kết quả trên led 7 thanh.
 
 # Các hàm và chức năng của chúng:
 
@@ -27,32 +27,31 @@
 # after_processing_code:
 # - Chuyển đến các chế độ xử lý tương ứng sau khi xử lý mã phím.
 
-# mode1:
+# case1:
 # - Chế độ nhập toán hạng.
 # - Nếu toán tử trước là "=", reset các giá trị cũ và bắt đầu nhập toán hạng mới.
-# - Hiển thị số mới trên module 7 đoạn.
+# - Hiển thị số mới trên led 7 thanh.
 
-# mode2:
+# case2:
 # - Chế độ nhập toán tử.
 # - Nếu toán tử không thay đổi, không làm gì. Ngược lại, cập nhật toán tử và lưu kết quả tạm thời.
-# - Hiển thị toán tử tương ứng trên module 7 đoạn.
+# - Hiển thị toán tử tương ứng trên led 7 thanh.
 
-# mode3:
+# case3:
 # - Chế độ tính toán kết quả.
 # - Thực hiện phép toán giữa toán hạng và kết quả tạm thời dựa trên toán tử hiện tại.
-# - Hiển thị kết quả mới trên module 7 đoạn.
+# - Hiển thị kết quả mới trên led 7 thanh.
 
 # sleep:
 # - Tạm dừng chương trình trong một khoảng thời gian ngắn để tránh xử lý quá nhanh.
 
 # render:
-# - Hiển thị số nguyên cần hiển thị trên module 7 đoạn.
+# - Hiển thị số nguyên cần hiển thị trên led 7 thanh.
 # - Tách số nguyên thành hàng đơn vị và hàng chục, sau đó gọi hàm show_digit để hiển thị từng phần.
 
 # show_digit:
-# - Hiển thị một số đơn trên module 7 đoạn.
-# - Chuyển đổi số cần hiển thị thành dạng mã của module 7 đoạn và ghi vào địa chỉ tương ứng.
-
+# - Hiển thị một số đơn trên led 7 thanh.
+# - Chuyển đổi số cần hiển thị thành dạng mã của led 7 thanh và ghi vào địa chỉ tương ứng.
 
 .eqv SEVENSEG_LEFT	0xFFFF0011
 .eqv SEVENSEG_RIGHT	0xFFFF0010
@@ -76,6 +75,7 @@
 .eqv CODE_EQL						0x88
 .data
 NUMS_OF_7SEG:	.word		0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F # Lưu sẵn dạng mã LED 7 thanh của số (0 -> 9) vào mảng
+str:    .asciiz "Ban nhap dau '=' khi chua nhap toan hang, hay thu lai \n "
 .text
 main:
     li      $t1,            IN_ADDRESS_HEXA_KEYBOARD
@@ -87,6 +87,8 @@ start:
     li      $s3,            0                                               # Toán hạng của phép tính.
     li      $s4,            0                                               # Toán tử.
     li      $s5,            0                                               # Lưu trữ kết quả của phép tính trước đó.
+    li      $s6,            0                                               # Trạng thái kiểm tra toán hạng đã được nhập (0: chưa nhập, 1: đã nhập)
+
 polling:
 check_row_1:
     li      $t3,            0x01                                            # Check 0, 1, 2, 3 (hàng 1 của bàn phím)
@@ -138,42 +140,52 @@ code_processing:
 process_code_0:
     li      $s1,            0
     li      $s2,            1
+    li      $s6,            1  # Đánh dấu toán hạng đã được nhập
     j       after_processing_code
 process_code_1:
     li      $s1,            1
     li      $s2,            1
+    li      $s6,            1  # Đánh dấu toán hạng đã được nhập
     j       after_processing_code
 process_code_2:
     li      $s1,            2
     li      $s2,            1
+    li      $s6,            1  # Đánh dấu toán hạng đã được nhập
     j       after_processing_code
 process_code_3:
     li      $s1,            3
     li      $s2,            1
+    li      $s6,            1  # Đánh dấu toán hạng đã được nhập
     j       after_processing_code
 process_code_4:
     li      $s1,            4
     li      $s2,            1
+    li      $s6,            1  # Đánh dấu toán hạng đã được nhập
     j       after_processing_code
 process_code_5:
     li      $s1,            5
     li      $s2,            1
+    li      $s6,            1  # Đánh dấu toán hạng đã được nhập
     j       after_processing_code
 process_code_6:
     li      $s1,            6
     li      $s2,            1
+    li      $s6,            1  # Đánh dấu toán hạng đã được nhập
     j       after_processing_code
 process_code_7:
     li      $s1,            7
     li      $s2,            1
+    li      $s6,            1  # Đánh dấu toán hạng đã được nhập
     j       after_processing_code
 process_code_8:
     li      $s1,            8
     li      $s2,            1
+    li      $s6,            1  # Đánh dấu toán hạng đã được nhập
     j       after_processing_code
 process_code_9:
     li      $s1,            9
     li      $s2,            1
+    li      $s6,            1  # Đánh dấu toán hạng đã được nhập
     j       after_processing_code
 process_code_add:
     li      $s1,            10
@@ -201,21 +213,21 @@ process_code_eql:
     j       after_processing_code
 
 after_processing_code:
-    beq     $s2,            1,                          mode1
-    beq     $s2,            2,                          mode2
-    beq     $s2,            3,                          mode3
+    beq     $s2,            1,                          case1
+    beq     $s2,            2,                          case2
+    beq     $s2,            3,                          case3
 
 # Mode 1: Nếu toán tử cũ là "=", loại bỏ thông tin cũ. Cập nhật {toán hạng} mới, xuất ra số mới trên màn hình để ta thấy {toán hạng} mới.
-mode1:
-    beq     $s4,            15,                         mode1_1
-    j       mode1_2
-mode1_1:
+case1:
+    beq     $s4,            15,                         case1_1
+    j       case1_2
+case1_1:
     li      $s3,            0                                               # Reset
     li      $s4,            0                                               # Reset
     li      $s5,            0                                               # Reset
-mode1_2:
-    mul     $s3,            $s3,                        10
-    add     $s3,            $s3,                        $s1
+case1_2:
+    mul     $s3,            $s3,                        10                  # Tính toán lại giá trị toán hạng
+    add     $s3,            $s3,                        $s1                 
     add     $a0,            $zero,                      $s1                 # In ra số mới trên màn hình
     li      $v0,            1
     syscall 
@@ -225,7 +237,7 @@ mode1_2:
 
 # Chế độ 2: Nếu {toán tử} cũ không thay đổi, không làm gì cả.
 # Ngược lại, cập nhật {toán tử}, cập nhật {kết quả} = {toán hạng}, đầu ra {toán hạng} cũ, xóa {toán hạng} cũ.
-mode2:
+case2:
     beq     $s4,            $s1,                        sleep
     add     $s4,            $zero,                      $s1                 # cập nhật {toán tử}
     add     $s5,            $zero,                      $s3                 # cập nhật {kết quả} = {toán hạng}
@@ -236,41 +248,42 @@ mode2:
     beq     $s1,            12,                         print_mul
     beq     $s1,            13,                         print_div
     beq     $s1,            14,                         print_mod
-mode2_2:           
+case2_2:           
     li      $s3,            0                                               # Xoá {toán hạng} cũ
     j       sleep
 print_add:
     li      $a0,            '+'                                             # In toán tử tương ứng
     li      $v0,            11
     syscall
-    j mode2_2
+    j case2_2
 
 print_sub:
     li      $a0,            '-'                                             # In toán tử tương ứng
     li      $v0,            11
     syscall
-    j mode2_2
+    j case2_2
 
 print_mul:
     li      $a0,            '*'                                             # In toán tử tương ứng
     li      $v0,            11
     syscall
-    j mode2_2
+    j case2_2
 
 print_div:
     li      $a0,            '/'                                             # In toán tử tương ứng
     li      $v0,            11
     syscall
-    j mode2_2
+    j case2_2
 
 print_mod:
     li      $a0,            '%'                                             # In toán tử tương ứng
     li      $v0,            11
     syscall
-    j mode2_2
+    j case2_2
 
 # Chế độ 3: Cập nhật {kết quả} = {kết quả} {toán tử} {toán hạng}, cập nhật {toán tử}, cập nhật {toán hạng} = {kết quả}, đầu ra {kết quả} mới.
-mode3:
+case3:
+    beq     $s6,            0,                          error_no_operand   # Nếu chưa nhập toán hạng, báo lỗi
     beq     $s4,            10,                         compu_add
     beq     $s4,            11,                         compu_sub
     beq     $s4,            12,                         compu_mul
@@ -323,7 +336,7 @@ render_store:
     sw      $ra,    20($sp)                 # Lưu địa chỉ trả về
     sw      $s0,    16($sp)                 # Lưu giá trị thanh ghi $s0
     sw      $a0,    12($sp)             # Lưu giá trị tham số $a0 (số nguyên cần hiển thị)
-    sw      $a1,    08($sp)             # Lưu giá trị tham số $a1 (địa chỉ của module 7 đoạn)
+    sw      $a1,    08($sp)             # Lưu giá trị tham số $a1 (địa chỉ của led 7 thanh)
     sw      $t0,    04($sp)             # Lưu giá trị thanh ghi $t0
     sw      $t1,    00($sp)             # Lưu giá trị thanh ghi $t1
 render_do:
@@ -331,12 +344,12 @@ render_do:
     add     $t1,    $zero,  $a0         # Sao chép giá trị tham số $a0 vào thanh ghi $t1
     div     $t1,    $t0                 # Chia $t1 cho 10
     mfhi    $a0                         # Lấy phần dư của phép chia, chứa hàng đơn vị
-    li      $a1,    SEVENSEG_RIGHT      # Đặt địa chỉ của module 7 đoạn bên phải vào $a1
+    li      $a1,    SEVENSEG_RIGHT      # Đặt địa chỉ của led 7 thanh bên phải vào $a1
     jal     show_digit                  # Gọi hàm show_digit để hiển thị số hàng đơn vị
     mflo    $t1                         # Lấy phần thập phân của phép chia, chứa hàng chục
     div     $t1,    $t0                 # Chia phần thập phân cho 10
     mfhi    $a0                         # Lấy phần dư của phép chia, chứa hàng chục
-    li      $a1,    SEVENSEG_LEFT       # Đặt địa chỉ của module 7 đoạn bên trái vào $a1
+    li      $a1,    SEVENSEG_LEFT       # Đặt địa chỉ của led 7 thanh bên trái vào $a1
     jal     show_digit                  # Gọi hàm show_digit để hiển thị số hàng chục
 
 render_load:
@@ -365,7 +378,7 @@ show_digit_do:
     sll     $t1,    $a0,    2           # Nhân $a0 (số cần hiển thị) với 4 (độ dịch trái 2 bit)
     add     $t0,    $t0,    $t1         # Tính địa chỉ của NUMS_OF_7SEG[$a0]
     lw      $t0,    0($t0)              # Load giá trị từ NUMS_OF_7SEG[$a0] vào $t0
-    sb      $t0,    0($a1)              # Ghi giá trị này vào địa chỉ của module 7 đoạn ($a1)
+    sb      $t0,    0($a1)              # Ghi giá trị này vào địa chỉ của led 7 thanh ($a1)
 
 show_digit_load:
     lw      $t1,    00($sp)             # Load giá trị thanh ghi $t1 từ stack
@@ -374,3 +387,8 @@ show_digit_load:
     add     $sp,    $sp,    +12         # Thu hẹp stack
     jr      $ra                         # Trả về
 
+error_no_operand:
+    la      $a0,            str    # Thông báo lỗi
+    li      $v0,            4
+    syscall
+    j       sleep
